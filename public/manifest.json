@@ -10,35 +10,29 @@
   "theme_color": "#00B875",
   "icons": [
     {
-      "src": "/logo.jpg",
-      "sizes": "192x192",
-      "type": "image/jpeg",
+      "src": "/logo.svg",
+      "sizes": "192x192 512x512 any",
+      "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/logo.jpg",
-      "sizes": "512x512",
-      "type": "image/jpeg",
-      "purpose": "any"
-    },
-    {
-      "src": "/logo.jpg",
-      "sizes": "192x192",
-      "type": "image/jpeg",
+      "src": "/logo.svg",
+      "sizes": "192x192 512x512 any",
+      "type": "image/svg+xml",
       "purpose": "maskable"
     }
   ],
   "screenshots": [
     {
-      "src": "/logo.jpg",
+      "src": "/logo.svg",
       "sizes": "540x720",
-      "type": "image/jpeg",
+      "type": "image/svg+xml",
       "form_factor": "narrow"
     },
     {
-      "src": "/logo.jpg",
+      "src": "/logo.svg",
       "sizes": "1280x720",
-      "type": "image/jpeg",
+      "type": "image/svg+xml",
       "form_factor": "wide"
     }
   ],
@@ -51,9 +45,9 @@
       "url": "/?action=transfer",
       "icons": [
         {
-          "src": "/logo.jpg",
-          "sizes": "192x192",
-          "type": "image/jpeg"
+          "src": "/logo.svg",
+          "sizes": "192x192 512x512 any",
+          "type": "image/svg+xml"
         }
       ]
     },
@@ -64,9 +58,9 @@
       "url": "/?action=balance",
       "icons": [
         {
-          "src": "/logo.jpg",
-          "sizes": "192x192",
-          "type": "image/jpeg"
+          "src": "/logo.svg",
+          "sizes": "192x192 512x512 any",
+          "type": "image/svg+xml"
         }
       ]
     }

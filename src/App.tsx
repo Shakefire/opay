@@ -25,6 +25,7 @@ import RewardsCenter from './components/RewardsCenter.tsx';
 import ProfileSettings from './components/ProfileSettings.tsx';
 import NotificationToast from './components/NotificationToast.tsx';
 import InstallAppButton from './components/InstallAppButton.tsx';
+import InstallAppModal from './components/InstallAppModal.tsx';
 
 interface AlertToast {
   id: string;
@@ -842,7 +843,7 @@ export default function App() {
       </div>
 
       {/* Primary Mobile Container Frame */}
-      <div className="w-full sm:max-w-md bg-[#F6F6F6] min-h-screen sm:min-h-[850px] sm:max-h-[920px] sm:rounded-[36px] shadow-2xl flex flex-col relative overflow-hidden sm:border-[8px] sm:border-slate-800/90 hover:shadow-emerald-500/5 transition-all">
+      <div className="w-full sm:max-w-md bg-[#F6F6F6] h-screen sm:h-[90vh] sm:max-h-[920px] sm:min-h-[700px] sm:rounded-[36px] shadow-2xl flex flex-col relative overflow-hidden sm:border-[8px] sm:border-slate-800/90 hover:shadow-emerald-500/5 transition-all">
         
         {/* Dynamic Notch speaker decor on Desktop only */}
         <div className="hidden sm:block absolute top-0 inset-x-0 h-4 bg-slate-800/90 z-50">
@@ -852,7 +853,7 @@ export default function App() {
         </div>
 
         {/* Content Outer Wrapper */}
-        <div className="flex flex-col flex-1 sm:pt-4 overflow-y-auto">
+        <div className="flex flex-col flex-1 sm:pt-4 overflow-y-auto no-scrollbar">
           {!isLoggedIn ? (
             <Login onLoginSuccess={handleLoginSuccess} userFullName={user.fullName} />
           ) : (
@@ -934,7 +935,7 @@ export default function App() {
               )}
 
               {/* Core Render Screen */}
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto no-scrollbar">
                 {selectedTransaction ? (
                   <TransactionDetails
                     transaction={selectedTransaction}
@@ -1309,6 +1310,8 @@ export default function App() {
         )}
 
         {/* Instant transfer drawers */}
+        <InstallAppModal />
+
         <TransferDrawer
           isOpen={transferType !== null}
           onClose={() => setTransferType(null)}
@@ -1318,6 +1321,7 @@ export default function App() {
           transferType={transferType || 'OPay'}
           onTransferSuccess={handleTransferExecuted}
           userFullName={user.fullName}
+          userAccountNumber={user.opayAccountNumber}
         />
 
         {/* Slide down Toast Alert Banner removed to prevent popup distraction as per user request */}

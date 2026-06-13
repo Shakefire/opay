@@ -21,6 +21,7 @@ interface TransferDrawerProps {
   onTransferSuccess: (newTx: Transaction, amount: number, paymentMethod: 'Balance' | 'OWealth') => void;
   transferType: 'OPay' | 'Bank';
   userFullName?: string;
+  userAccountNumber?: string;
 }
 
 export function renderBankLogo(bankName: string, sizeClass = 'w-10 h-10') {
@@ -35,7 +36,8 @@ export default function TransferDrawer({
   beneficiaries,
   onTransferSuccess,
   transferType,
-  userFullName = 'User'
+  userFullName = 'User',
+  userAccountNumber = '912****904'
 }: TransferDrawerProps) {
   // 1: Select recipient, 2: Enter amount, 3: Checkout Page, 4: PIN Pad, 5: Receipt success
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1); 
@@ -226,7 +228,7 @@ export default function TransferDrawer({
   return (
     <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs flex justify-center items-end sm:items-center p-0 sm:p-4">
       <div 
-        className="w-full sm:max-w-md bg-[#F4F5F8] rounded-t-3xl sm:rounded-3xl max-h-[96vh] overflow-y-auto shadow-2xl flex flex-col relative"
+        className="w-full sm:max-w-md bg-[#F4F5F8] rounded-t-3xl sm:rounded-3xl max-h-[96vh] overflow-y-auto no-scrollbar shadow-2xl flex flex-col relative"
         style={{ animation: 'slide-up 0.28s cubic-bezier(0.16, 1, 0.3, 1)' }}
       >
         {/* Step 1: Transfer Form with exact fidelity corresponding to Screenshot 1 */}
@@ -251,7 +253,7 @@ export default function TransferDrawer({
               </button>
             </div>
 
-            <div className="p-4 space-y-4 flex-1 overflow-y-auto">
+            <div className="p-4 space-y-4 flex-1 overflow-y-auto no-scrollbar">
               {/* Claim promo discount banner (Screenshot 1 top green) */}
               <div className="bg-[#E4FBF1] rounded-2xl p-4 flex items-center justify-between border border-[#B3F2D4]">
                 <div className="flex items-center gap-3">
@@ -435,7 +437,7 @@ export default function TransferDrawer({
                 </div>
 
                 {/* Recents list filtered by wallet vs bank type */}
-                <div className="space-y-1 overflow-y-auto max-h-[220px]">
+                <div className="space-y-1 overflow-y-auto no-scrollbar max-h-[220px]">
                   {list.length > 0 ? (
                     list.map(b => (
                       <button
@@ -505,7 +507,7 @@ export default function TransferDrawer({
 
             <div className="flex flex-row flex-1 overflow-hidden">
               {/* Core catalog body scroll */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-6">
+              <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-6">
                 
                 {/* Frequently Used Bank grid (Screenshot 2 middle) */}
                 {!bankSearchQuery && (
@@ -982,7 +984,7 @@ export default function TransferDrawer({
               </button>
             </div>
 
-            <div className="p-4 space-y-4 flex-1 overflow-y-auto">
+            <div className="p-4 space-y-4 flex-1 overflow-y-auto no-scrollbar">
               
               {/* High-fidelity authentic receipt layout */}
               <AuthenticReceipt
@@ -995,7 +997,7 @@ export default function TransferDrawer({
                 recipientAccount={selectedBeneficiary.accountNo}
                 senderName={userFullName}
                 senderBank="OPay"
-                senderAccount="912****904"
+                senderAccount={userAccountNumber}
                 transactionNo={createdTx.transactionNo}
                 backdropBg="#F4F5F8" // perfectly matches Step 5 bg parent: lg bg-[#F4F5F8]
               />
@@ -1062,8 +1064,11 @@ export default function TransferDrawer({
         <ShareReceiptModal
           isOpen={isShareOpen}
           onClose={() => setIsShareOpen(false)}
+          userFullName={userFullName}
+          userAccountNumber={userAccountNumber}
           transaction={{
             title: createdTx.title,
+            type: createdTx.type,
             amount: createdTx.amount,
             recipientName: selectedBeneficiary.name,
             recipientBank: selectedBeneficiary.bankName,

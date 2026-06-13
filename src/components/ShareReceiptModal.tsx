@@ -46,8 +46,9 @@ export default function ShareReceiptModal({ isOpen, onClose, userFullName, userA
   const payMethod = transaction.paymentMethod || 'Balance';
   const statusStr = transaction.status || 'Successful';
 
-  const finalType = transaction.type || (amountVal > 0 ? "transfer_in" : "transfer_out");
-  const isIncoming = amountVal > 0 || ['transfer_in', 'bonus', 'owealth_interest', 'deposit'].includes(finalType);
+  const signedAmount = transaction.amount || 0;
+  const finalType = transaction.type || (signedAmount > 0 ? "transfer_in" : "transfer_out");
+  const isIncoming = signedAmount > 0 || ['transfer_in', 'bonus', 'owealth_interest', 'deposit'].includes(finalType);
   const activeUserFullName = (userFullName || "KABIR HASSAN MUHAMMAD").toUpperCase();
   const activeUserAccountNumber = userAccountNumber || "912****904";
 
@@ -227,7 +228,7 @@ export default function ShareReceiptModal({ isOpen, onClose, userFullName, userA
 
         // --- DRAW WATERMARK PRECISELY ---
         ctx.save();
-        ctx.globalAlpha = 0.035;
+        ctx.globalAlpha = 0.08;
         ctx.fillStyle = '#00B875';
         ctx.translate(canvas.width / 2, canvas.height / 2);
         ctx.rotate(-22 * Math.PI / 180);
@@ -411,15 +412,15 @@ export default function ShareReceiptModal({ isOpen, onClose, userFullName, userA
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
       {/* Dim backdrop background */}
       <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300"
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300"
         onClick={onClose}
       />
 
       {/* Share dialog layout */}
-      <div className="relative bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-slate-100 z-10 animate-in fade-in zoom-in-95 duration-200 flex flex-col">
+      <div className="relative bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-slate-100 z-10 animate-in fade-in zoom-in-95 duration-200 flex flex-col my-auto">
         
         {/* Hidden Canvas utility helper for offline physical receipts generation */}
         <canvas ref={canvasRef} className="hidden" />
@@ -442,8 +443,8 @@ export default function ShareReceiptModal({ isOpen, onClose, userFullName, userA
         {/* Modal body options list */}
         <div className="p-6">
           
-          {/* Authentic Receipt visual pre-rendering scroll preview */}
-          <div className="max-h-[340px] overflow-y-auto mb-6 rounded-2xl bg-[#EAEDF1] p-3.5 border border-slate-200 shadow-inner">
+          {/* Authentic Receipt visual pre-rendering preview */}
+          <div className="mb-6 rounded-2xl bg-[#EAEDF1] p-3.5 border border-slate-200 shadow-inner overflow-hidden">
             <AuthenticReceipt
               transaction={transaction}
               userFullName={userFullName}

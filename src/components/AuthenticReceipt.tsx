@@ -215,7 +215,7 @@ export default function AuthenticReceipt({
 
       {/* High Fidelity Repeating Diagonal OPay Brand Watermark Pattern */}
       <div 
-        className="absolute inset-0 opacity-[0.035] pointer-events-none select-none z-0" 
+        className="absolute inset-0 opacity-[0.08] pointer-events-none select-none z-0" 
         style={{
           backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'><g transform='rotate(-22 75 75)' fill='%2300B875'><circle cx='20' cy='75' r='8' stroke='%2300B875' stroke-width='2.5' fill='none'/><rect x='24' y='73' width='6' height='4' fill='white'/><rect x='22' y='73.5' width='6' height='3' fill='%2300B875'/><text x='34' y='82' font-family='system-ui, sans-serif' font-weight='900' font-size='19' letter-spacing='-1'>OPay</text></g></svg>")`,
           backgroundRepeat: 'repeat'

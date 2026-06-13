@@ -8,24 +8,24 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/logo.jpg'
+  '/logo.svg'
 ];
 
 // Install event - cache static assets
-self.addEventListener('install', (event: ExtendableEvent) => {
+self.addEventListener('install', (event) => {
   console.log('[ServiceWorker] Installing...');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('[ServiceWorker] Caching static assets');
       return cache.addAll(STATIC_ASSETS);
     }).then(() => {
-      return (self as any).skipWaiting();
+      return self.skipWaiting();
     })
   );
 });
 
 // Activate event - clean up old caches
-self.addEventListener('activate', (event: ExtendableEvent) => {
+self.addEventListener('activate', (event) => {
   console.log('[ServiceWorker] Activating...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -38,13 +38,13 @@ self.addEventListener('activate', (event: ExtendableEvent) => {
         })
       );
     }).then(() => {
-      return (self as any).clients.claim();
+      return self.clients.claim();
     })
   );
 });
 
 // Fetch event - serve from cache, fall back to network
-self.addEventListener('fetch', (event: FetchEvent) => {
+self.addEventListener('fetch', (event) => {
   const { request } = event;
 
   // Skip non-GET requests
@@ -92,5 +92,3 @@ self.addEventListener('fetch', (event: FetchEvent) => {
       })
   );
 });
-
-export {};

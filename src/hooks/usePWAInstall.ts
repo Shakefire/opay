@@ -130,7 +130,7 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   }
 
   try {
-    const registration = await navigator.serviceWorker.register('/service-worker.ts', {
+    const registration = await navigator.serviceWorker.register('/service-worker.js', {
       scope: '/'
     });
     console.log('[PWA] Service Worker registered', registration);
