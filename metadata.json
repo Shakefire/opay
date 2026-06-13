@@ -1,0 +1,6 @@
+{
+  "name": "OPay Mobile App Clone",
+  "description": "An interactive, premium frontend clone of the OPay mobile application designed for educational demonstrations, featuring high-fidelity layouts, search, transfers, transactions, and notification systems.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
