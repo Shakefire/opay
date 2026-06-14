@@ -15,8 +15,10 @@ export interface Transaction {
   recipientMobile?: string;
   recipientBank?: string;
   recipientAccount?: string;
+  recipientName?: string;
   paymentMethod?: string;
   transactionNo: string;
+  sessionId?: string;
   notes?: string;
 }
 

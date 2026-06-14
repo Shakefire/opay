@@ -94,7 +94,76 @@ export const INITIAL_BENEFICIARIES: Beneficiary[] = [
   }
 ];
 
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+export function formatOPayDate(date: Date): string {
+  const monthStr = months[date.getMonth()];
+  const day = date.getDate();
+  let suffix = 'th';
+  if (day === 1 || day === 21 || day === 31) suffix = 'st';
+  else if (day === 2 || day === 22) suffix = 'nd';
+  else if (day === 3 || day === 23) suffix = 'rd';
+  return `${monthStr} ${day}${suffix}, ${date.getFullYear()}`;
+}
+
+export function getTxNoPrefix(date: Date): string {
+  const yy = String(date.getFullYear()).slice(-2);
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yy}${mm}${dd}`;
+}
+
+export function parseOPayDateTime(dateStr: string, timeStr: string): number {
+  if (!dateStr) return 0;
+  const cleanDate = dateStr
+    .replace(/(\d+)(st|nd|rd|th)/, '$1')
+    .replace(',', '');
+  
+  const parts = cleanDate.trim().split(/\s+/);
+  if (parts.length === 0) return 0;
+
+  const monthName = parts[0];
+  const monthIndex = months.indexOf(monthName);
+  const month = monthIndex !== -1 ? monthIndex : 5; // default to June (5)
+  
+  const day = parts[1] ? parseInt(parts[1], 10) : 1;
+  const year = parts[2] ? parseInt(parts[2], 10) : 2026; // default to 2026
+
+  let hours = 0, minutes = 0, seconds = 0;
+  if (timeStr) {
+    const timeParts = timeStr.split(':');
+    hours = parseInt(timeParts[0], 10) || 0;
+    minutes = parseInt(timeParts[1], 10) || 0;
+    seconds = parseInt(timeParts[2], 10) || 0;
+  }
+
+  return new Date(year, month, day, hours, minutes, seconds).getTime();
+}
+
+const today = new Date();
+const d1 = new Date(); d1.setDate(today.getDate() - 1);
+const d2 = new Date(); d2.setDate(today.getDate() - 2);
+const d3 = new Date(); d3.setDate(today.getDate() - 3);
+const d4 = new Date(); d4.setDate(today.getDate() - 4);
+const d5 = new Date(); d5.setDate(today.getDate() - 5);
+
 export const INITIAL_TRANSACTIONS: Transaction[] = [
+  {
+    id: 't_tumba_monie',
+    title: 'Transfer to TUMBA KWAYA ENTERPRISES - TVK',
+    type: 'transfer_out',
+    amount: -1550.00,
+    status: 'Successful',
+    date: 'Jun 11th, 2026',
+    time: '14:03:05',
+    category: 'Transfer',
+    recipientName: 'TUMBA KWAYA ENTERPRISES - TVK',
+    recipientAccount: '8252360230',
+    recipientBank: 'Moniepoint MFB',
+    paymentMethod: 'OWealth',
+    transactionNo: '260611020100302659217561',
+    sessionId: 'APT000032606111303111623332530752',
+  },
   {
     id: 't_aroma_rest',
     title: 'Transfer to AROMA RESTAURANT',
@@ -141,10 +210,10 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     type: 'owealth_interest',
     amount: 0.09,
     status: 'Successful',
-    date: 'Jun 13th, 2026',
+    date: formatOPayDate(today),
     time: '01:45:59',
     category: 'Interest',
-    transactionNo: '260613014559289799112233',
+    transactionNo: getTxNoPrefix(today) + '014559289799112233',
     paymentMethod: 'OWealth Interest'
   },
   {
@@ -219,10 +288,10 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     type: 'owealth_interest',
     amount: 0.09,
     status: 'Successful',
-    date: 'Jun 11th, 2026',
+    date: formatOPayDate(d1),
     time: '02:27:01',
     category: 'Interest',
-    transactionNo: '260611022701289799112233',
+    transactionNo: getTxNoPrefix(d1) + '022701289799112233',
     paymentMethod: 'OWealth Interest'
   },
   {
@@ -231,10 +300,10 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     type: 'owealth_interest',
     amount: 0.09,
     status: 'Successful',
-    date: 'Jun 10th, 2026',
+    date: formatOPayDate(d2),
     time: '03:01:29',
     category: 'Interest',
-    transactionNo: '260610030129289799112244',
+    transactionNo: getTxNoPrefix(d2) + '030129289799112244',
     paymentMethod: 'OWealth Interest'
   },
   {
@@ -318,10 +387,10 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     type: 'owealth_interest',
     amount: 0.09,
     status: 'Successful',
-    date: 'Jun 9th, 2026',
+    date: formatOPayDate(d3),
     time: '02:15:47',
     category: 'Interest',
-    transactionNo: '260609021547289799112255',
+    transactionNo: getTxNoPrefix(d3) + '021547289799112255',
     paymentMethod: 'OWealth Interest'
   },
   {
@@ -355,10 +424,10 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     type: 'owealth_interest',
     amount: 0.41,
     status: 'Successful',
-    date: 'Jun 8th, 2026',
+    date: formatOPayDate(d4),
     time: '02:51:42',
     category: 'Interest',
-    transactionNo: '260608025142289799112266',
+    transactionNo: getTxNoPrefix(d4) + '025142289799112266',
     paymentMethod: 'OWealth Interest'
   },
   {
@@ -418,11 +487,11 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     type: 'owealth_interest',
     amount: 1.50,
     status: 'Successful',
-    date: 'May 10th, 2026',
+    date: formatOPayDate(d5),
     time: '02:00:25',
     category: 'Interest',
-    paymentMethod: 'OWealth Interest',
-    transactionNo: '26051002002528979911'
+    transactionNo: getTxNoPrefix(d5) + '02002528979911',
+    paymentMethod: 'OWealth Interest'
   },
   {
     id: 't_a1',

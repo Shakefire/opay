@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 
 import { Beneficiary, Transaction, UserState, NotificationItem } from './types.ts';
-import { INITIAL_BENEFICIARIES, INITIAL_TRANSACTIONS, INITIAL_NOTIFICATIONS } from './data.ts';
+import { INITIAL_BENEFICIARIES, INITIAL_TRANSACTIONS, INITIAL_NOTIFICATIONS, formatOPayDate, getTxNoPrefix, parseOPayDateTime } from './data.ts';
 
 // Component imports
 import Login from './components/Login.tsx';
@@ -43,6 +43,13 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object') {
+          // If the cached values are the old default, update them to the new default
+          if (parsed.balance === 17000.81) {
+            parsed.balance = 7500.42;
+          }
+          if (parsed.owealthBalance === 17000.81) {
+            parsed.owealthBalance = 7500.42;
+          }
           return parsed;
         }
       }
@@ -50,10 +57,10 @@ export default function App() {
     return {
       fullName: 'SHIMESON',
       phoneNumber: '081 2933 3888',
-      balance: 17000.81,
+      balance: 7500.42,
       bonusBalance: 53.50,
       showBalance: true,
-      owealthBalance: 17000.81,
+      owealthBalance: 7500.42,
       owealthInterestRate: 15.0,
       tierLevel: 3,
       biometricsEnabled: true,
@@ -97,6 +104,16 @@ export default function App() {
   const [selectedMonthYear, setSelectedMonthYear] = useState<string>('Jun 2026');
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
 
+  // Listen for custom "view-transactions-records" event from TransferDrawer step 5
+  useEffect(() => {
+    const handleViewRecords = () => {
+      setViewingAllTransactions(true);
+      setActiveTab('home');
+    };
+    window.addEventListener('view-transactions-records', handleViewRecords);
+    return () => window.removeEventListener('view-transactions-records', handleViewRecords);
+  }, []);
+
   // Trigger automated interest compounding occasionally for realism
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -106,17 +123,18 @@ export default function App() {
       const yieldAmt = 0.09;
       const roundedVal = Math.round((user.owealthBalance + yieldAmt) * 100) / 100;
       
+      const now = new Date();
       const newTx: Transaction = {
         id: `t_auto_${Date.now()}`,
         title: 'OWealth Interest Earned',
         type: 'owealth_interest',
         amount: yieldAmt,
         status: 'Successful',
-        date: 'Jun 12th, 2026',
-        time: new Date().toLocaleTimeString('en-US', { hour12: false }),
+        date: formatOPayDate(now),
+        time: now.toLocaleTimeString('en-US', { hour12: false }),
         category: 'Interest',
         paymentMethod: 'OWealth Interest',
-        transactionNo: `260612${Math.floor(Math.random() * 89999 + 10000)}2897`,
+        transactionNo: `${getTxNoPrefix(now)}${Math.floor(Math.random() * 89999 + 10000)}2897`,
         notes: 'Compound hourly payout interest'
       };
 
@@ -327,7 +345,7 @@ export default function App() {
       if (getTransactionMonthYear(t) !== selectedMonthYear) return false;
     }
     return true;
-  });
+  }).sort((a, b) => parseOPayDateTime(b.date, b.time) - parseOPayDateTime(a.date, a.time));
 
   const uniqueMonths = Array.from(new Set(transactions.map(getTransactionMonthYear)))
     .sort((a: string, b: string) => {
@@ -370,10 +388,10 @@ export default function App() {
     setUser({
       fullName: 'SHIMESON',
       phoneNumber: '081 2933 3888',
-      balance: 17000.81,
+      balance: 7500.42,
       bonusBalance: 53.50,
       showBalance: true,
-      owealthBalance: 17000.81,
+      owealthBalance: 7500.42,
       owealthInterestRate: 15.0,
       tierLevel: 3,
       biometricsEnabled: true,
@@ -398,15 +416,49 @@ export default function App() {
   // Helper to render high-fidelity, unique icons for various transaction categories
   const renderTransactionIcon = (type: string, sizeClass = "w-11 h-11 rounded-2xl") => {
     const isSmall = sizeClass.includes('w-9') || sizeClass.includes('w-8');
-    const iconSizeClass = isSmall ? "w-[16px] h-[16px]" : "w-[19px] h-[19px]";
-    const strokeWidth = isSmall ? "2" : "2.2";
-    const bgStyle = `${sizeClass} bg-[#E2F7EE] flex items-center justify-center shrink-0`;
-    
+    const circleSz = isSmall ? "w-9 h-9" : "w-11 h-11";
+    const arrowSz = isSmall ? "w-[14px] h-[14px]" : "w-[17px] h-[17px]";
+    const iconSz = isSmall ? "w-[15px] h-[15px]" : "w-[18px] h-[18px]";
+    const sw = isSmall ? "2.5" : "2.8";
+
     switch (type) {
+      case 'transfer_out':
+        // Outgoing: solid green circle + bold upward arrow
+        return (
+          <div className={`${circleSz} rounded-full bg-[#E2F7EE] flex items-center justify-center shrink-0`}>
+            <svg viewBox="0 0 24 24" className={`${arrowSz} stroke-[#00B875] fill-none`} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="19" x2="12" y2="5" />
+              <polyline points="6 11 12 5 18 11" />
+            </svg>
+          </div>
+        );
+
+      case 'transfer_in':
+        // Incoming: solid green circle + bold downward arrow
+        return (
+          <div className={`${circleSz} rounded-full bg-[#E2F7EE] flex items-center justify-center shrink-0`}>
+            <svg viewBox="0 0 24 24" className={`${arrowSz} stroke-[#00B875] fill-none`} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <polyline points="18 13 12 19 6 13" />
+            </svg>
+          </div>
+        );
+
+      case 'airtime':
+        // Mobile phone icon in green circle
+        return (
+          <div className={`${circleSz} rounded-full bg-[#E2F7EE] flex items-center justify-center shrink-0`}>
+            <svg viewBox="0 0 24 24" className={`${iconSz} fill-none stroke-[#00B875]`} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="6.5" y="2" width="11" height="20" rx="2.5" />
+              <line x1="12" y1="18" x2="12" y2="18.01" strokeWidth="3" strokeLinecap="round" />
+            </svg>
+          </div>
+        );
+
       case 'bonus':
         return (
-          <div className={bgStyle}>
-            <svg viewBox="0 0 24 24" className={`${iconSizeClass} fill-none stroke-[#00B875]`} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+          <div className={`${circleSz} rounded-full bg-[#E2F7EE] flex items-center justify-center shrink-0`}>
+            <svg viewBox="0 0 24 24" className={`${iconSz} fill-none stroke-[#00B875]`} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="8" width="18" height="12" rx="2" ry="2" />
               <line x1="12" y1="8" x2="12" y2="20" />
               <path d="M12 8H7.5a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8z" />
@@ -414,47 +466,32 @@ export default function App() {
             </svg>
           </div>
         );
-      case 'airtime':
-        return (
-          <div className={bgStyle}>
-            <svg viewBox="0 0 24 24" className={`${iconSizeClass} fill-none stroke-[#00B875]`} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
-              <rect x="6" y="2" width="12" height="20" rx="3.5" strokeWidth={strokeWidth} />
-              <path d="M9 16h1M9 13.5h2M9 11h3" strokeWidth="1.8" />
-            </svg>
-          </div>
-        );
+
       case 'owealth_interest':
         return (
-          <div className={bgStyle}>
-            <svg viewBox="0 0 24 24" className={`${iconSizeClass} fill-none stroke-[#00B875]`} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+          <div className={`${circleSz} rounded-full bg-[#E2F7EE] flex items-center justify-center shrink-0`}>
+            <svg viewBox="0 0 24 24" className={`${iconSz} fill-none stroke-[#00B875]`} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="20" x2="18" y2="10" />
               <line x1="12" y1="20" x2="12" y2="4" />
               <line x1="6" y1="20" x2="6" y2="14" />
             </svg>
           </div>
         );
-      case 'transfer_out':
+
+      case 'deposit':
         return (
-          <div className={`${sizeClass} bg-amber-50 flex items-center justify-center shrink-0`}>
-            <svg viewBox="0 0 24 24" className={`${iconSizeClass} fill-none stroke-amber-600`} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
-              <line x1="7" y1="17" x2="17" y2="7" />
-              <polyline points="10 7 17 7 17 14" />
+          <div className={`${circleSz} rounded-full bg-[#E2F7EE] flex items-center justify-center shrink-0`}>
+            <svg viewBox="0 0 24 24" className={`${arrowSz} stroke-[#00B875] fill-none`} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <polyline points="18 13 12 19 6 13" />
             </svg>
           </div>
         );
-      case 'transfer_in':
-        return (
-          <div className={bgStyle}>
-            <svg viewBox="0 0 24 24" className={`${iconSizeClass} fill-none stroke-[#00B875]`} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
-              <line x1="17" y1="7" x2="7" y2="17" />
-              <polyline points="14 17 7 17 7 10" />
-            </svg>
-          </div>
-        );
+
       default:
         return (
-          <div className={bgStyle}>
-            <svg viewBox="0 0 24 24" className={`${iconSizeClass} fill-none stroke-[#00B875]`} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+          <div className={`${circleSz} rounded-full bg-[#E2F7EE] flex items-center justify-center shrink-0`}>
+            <svg viewBox="0 0 24 24" className={`${iconSz} fill-none stroke-[#00B875]`} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="4" width="18" height="16" rx="2" />
               <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
@@ -462,6 +499,7 @@ export default function App() {
         );
     }
   };
+
 
   // Render tab-specific modules
   const renderTabContent = () => {
@@ -575,7 +613,11 @@ export default function App() {
               </div>
 
               <div className="space-y-3">
-                {transactions.slice(0, 2).map((tx) => (
+                {transactions
+                  .filter(tx => tx.type === 'owealth_interest')
+                  .sort((a, b) => parseOPayDateTime(b.date, b.time) - parseOPayDateTime(a.date, a.time))
+                  .slice(0, 2)
+                  .map((tx) => (
                   <div 
                     key={tx.id}
                     onClick={() => setSelectedTransaction(tx)}
@@ -662,14 +704,14 @@ export default function App() {
             </div>
 
             {/* Quick Services Grid in Symmetrical 2x4 with Pale Mint Icon bases */}
-            <div className="bg-white rounded-[24px] p-5 shadow-3xs border border-gray-100/50">
-              <div className="grid grid-cols-4 gap-y-5 gap-x-2 text-center">
+            <div className="bg-white rounded-[24px] px-4 py-5 shadow-3xs border border-gray-100/50">
+              <div className="grid grid-cols-4 gap-y-6 gap-x-3 text-center">
                 {[
                   { 
                     label: 'Airtime', 
                     action: () => alert('Airtime purchases instantly rewarded with up to 10% cashbacks!'),
                     icon: (
-                      <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] fill-[#00B875] stroke-none">
+                      <svg viewBox="0 0 24 24" className="w-[26px] h-[26px] fill-[#00B875] stroke-none">
                         <rect x="6" y="2" width="12" height="20" rx="3" />
                         {/* Signal strength cutouts in white inside */}
                         <rect x="9" y="14" width="1.5" height="4" rx="0.5" fill="#FFFFFF" />
@@ -682,7 +724,7 @@ export default function App() {
                     label: 'Data', 
                     action: () => alert('Select data plans from MTN, Airtel, Glo, & 9Mobile with cash discounts'),
                     icon: (
-                      <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] fill-[#00B875] stroke-none">
+                      <svg viewBox="0 0 24 24" className="w-[26px] h-[26px] fill-[#00B875] stroke-none">
                         <rect x="6" y="2" width="12" height="20" rx="3" />
                         {/* Up arrow in white */}
                         <path d="M10 13V7M8.5 9.5L10 7l1.5 2.5" stroke="#FFFFFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
@@ -695,7 +737,7 @@ export default function App() {
                     label: 'Betting', 
                     action: () => alert('Fund your sport-bet wallets with zero gateway charges'),
                     icon: (
-                      <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] fill-[#00B875] stroke-none">
+                      <svg viewBox="0 0 24 24" className="w-[26px] h-[26px] fill-[#00B875] stroke-none">
                         {/* Beautiful custom-detailed FIFA World Cup trophy silhouette */}
                         <path d="M12 2a3.5 3.5 0 0 1 3.5 3.5c0 1-.5 2-1.2 2.7l.7 2.3c.5.5.5 1.2.1 1.7L13 15c1 1.3.8 2.8.2 3.5h-2.4c-.6-.7-.8-2.2.2-3.5l-2.1-2.8c-.4-.5-.4-1.2.1-1.7l.7-2.3C8.7 7.5 8.2 6.5 8.2 5.5A3.5 3.5 0 0 1 12 2z" />
                         <rect x="8.5" y="18.5" width="7" height="1.5" rx="0.5" />
@@ -707,7 +749,7 @@ export default function App() {
                     label: 'TV', 
                     action: () => alert('Pay DSTV, GOTV, and StarTimes TV bills easily'),
                     icon: (
-                      <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] fill-[#00B875] stroke-none">
+                      <svg viewBox="0 0 24 24" className="w-[26px] h-[26px] fill-[#00B875] stroke-none">
                         {/* Antennae */}
                         <path d="M17 2.5L12 6M7 2.5L12 6" stroke="#00B875" strokeWidth="2.2" strokeLinecap="round" />
                         {/* TV Chassis */}
@@ -721,7 +763,7 @@ export default function App() {
                     label: 'SafeBox', 
                     action: () => { setActiveTab('finance'); addToast('💰 SafeBox active', 'Redirected to high-growth financial vault.', 'secure'); },
                     icon: (
-                      <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] fill-[#00B875] stroke-none">
+                      <svg viewBox="0 0 24 24" className="w-[26px] h-[26px] fill-[#00B875] stroke-none">
                         <path d="M4 8a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V8z" />
                         <path d="M4 8c1-1.2 3.5-1.5 8-1.5s7 .3 8 1.5H4z" fill="#009C62" />
                         {/* Center Naira symbol in white */}
@@ -734,7 +776,7 @@ export default function App() {
                     label: 'Loan', 
                     action: () => { setActiveTab('finance'); addToast('💸 Loan accounts active', 'Simulated quick loan eligibility checks.', 'alert'); },
                     icon: (
-                      <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] fill-none stroke-[#00B875] stroke-[2.2]" strokeLinecap="round" strokeLinejoin="round">
+                      <svg viewBox="0 0 24 24" className="w-[26px] h-[26px] fill-none stroke-[#00B875] stroke-[2.2]" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="7.5" r="3.5" fill="#00B875" stroke="none" />
                         {/* Coin Naira strike in white */}
                         <path d="M10.5 7.5h3" stroke="#FFFFFF" strokeWidth="1.2" />
@@ -749,7 +791,7 @@ export default function App() {
                     label: 'BizPayment', 
                     action: () => alert('Business point of sale settlement dashboards'),
                     icon: (
-                      <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] fill-[#00B875] stroke-none">
+                      <svg viewBox="0 0 24 24" className="w-[26px] h-[26px] fill-[#00B875] stroke-none">
                         {/* Canopy roof on top */}
                         <path d="M3 10l1.2-5h15.6l1.2 5c-1 1-2.5.5-3 .5s-2-.5-3-.5-2.5.5-3 .5-2-.5-3-.5c-1 0-2.5.5-3 .5s-2-.5-3-.5" />
                         {/* Base store building with a wide rounded arch door */}
@@ -761,7 +803,7 @@ export default function App() {
                     label: 'More', 
                     action: () => alert('Dozens of partner utilities, electricity tokens, estate bills, and transport vouchers.'),
                     icon: (
-                      <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] fill-[#00B875] stroke-none">
+                      <svg viewBox="0 0 24 24" className="w-[26px] h-[26px] fill-[#00B875] stroke-none">
                         {/* Graduation cap shape */}
                         <path d="M12 2L4 6l8 4 8-4-8-4z" />
                         <path d="M6 8.5V13c0 1.5 2 2.5 6 2.5s6-1 6-2.5V8.5" />
@@ -780,10 +822,10 @@ export default function App() {
                     onClick={srv.action}
                     className="flex flex-col items-center group cursor-pointer relative"
                   >
-                    <div className="w-12 h-12 bg-[#E2F7EE] rounded-[16px] flex items-center justify-center transition-all group-hover:scale-105 active:scale-90 border border-transparent shadow-xs">
+                    <div className="w-14 h-14 bg-[#E2F7EE] rounded-[18px] flex items-center justify-center transition-all group-hover:scale-105 active:scale-90 border border-transparent shadow-xs">
                       {srv.icon}
                     </div>
-                    <span className="text-[11.5px] font-extrabold text-[#2D2D2D]/90 mt-1.8 block group-hover:text-[#00B875] transition-colors line-clamp-1 leading-none">{srv.label}</span>
+                    <span className="text-[12px] font-bold text-[#2D2D2D]/90 mt-2 block group-hover:text-[#00B875] transition-colors leading-tight text-center w-full">{srv.label}</span>
                   </button>
                 ))}
               </div>

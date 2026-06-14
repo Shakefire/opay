@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { ArrowLeft, CheckCircle2, Copy, Search, ShieldCheck, X, FileText } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Copy, Search, ShieldCheck, X, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Beneficiary, Transaction } from '../types.ts';
 import BiometricModal from './BiometricModal.tsx';
 import { NIGERIAN_BANKS_FULL, FREQUENT_BANKS } from '../utils/bankData.ts';
@@ -50,6 +50,7 @@ export default function TransferDrawer({
   const [createdTx, setCreatedTx] = useState<Transaction | null>(null);
   const [error, setError] = useState('');
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Step 1 Custom selection states
   const [activeSubTab, setActiveSubTab] = useState<'recents' | 'newAccount'>('recents');
@@ -172,6 +173,11 @@ export default function TransferDrawer({
     const txIdStr = Math.floor(Math.random() * 1000000);
     const mockTxNumber = `260611${txIdStr.toString().padStart(6, '0')}289737169019`;
 
+    const isBankTx = transferType === 'Bank' || !selectedBeneficiary?.bankName?.toLowerCase().includes('opay');
+    const mockSessionId = isBankTx
+      ? `APT${Math.floor(Math.random() * 1e12).toString().padStart(12, '0')}${Date.now().toString().slice(-9)}`
+      : undefined;
+
     const newTx: Transaction = {
       id: `t_${Date.now()}`,
       title: `Transfer to ${selectedBeneficiary?.name}`,
@@ -181,10 +187,12 @@ export default function TransferDrawer({
       date: formattedDate,
       time: formattedTime,
       category: 'Transfer',
+      recipientName: selectedBeneficiary?.name,
       recipientAccount: selectedBeneficiary?.accountNo,
       recipientBank: selectedBeneficiary?.bankName || 'OPay',
-      paymentMethod: paymentMethod === 'OWealth' ? 'OWealth Interest' : 'Balance',
+      paymentMethod: paymentMethod === 'OWealth' ? 'OWealth' : 'Balance',
       transactionNo: mockTxNumber,
+      sessionId: mockSessionId,
       notes: notes || (remarkType ? `${remarkType} transfer` : 'OPay instant transfer')
     };
 
@@ -961,92 +969,317 @@ export default function TransferDrawer({
           </div>
         )}
 
-        {/* Step 5: High-fidelity Transaction Receipt matching Screenshot 4 perfectly! */}
-        {step === 5 && createdTx && selectedBeneficiary && (
-          <div className="flex flex-col min-h-[580px] bg-[#F4F5F8] justify-between pb-6">
+        {/* Step 5: High-fidelity Transaction Details matching user's screen structure perfectly! */}
+        {step === 5 && createdTx && selectedBeneficiary && (() => {
+          const isBank = transferType === 'Bank' || (
+            !selectedBeneficiary.bankName?.toLowerCase().includes('opay')
+          );
+          return (
+          <div className="flex flex-col min-h-[580px] bg-[#F4F5F8] justify-between rounded-t-3xl sm:rounded-3xl overflow-hidden">
             
-            {/* Top Fixed Screen Header */}
-            <div className="bg-white px-6 py-4 flex justify-between items-center border-b border-gray-100">
+            {/* Top Navigation Bar (Section 1) */}
+            <div className="bg-white px-5 py-4 flex justify-between items-center shrink-0">
               <div className="flex items-center gap-3">
                 <button onClick={handleCloseAll} className="p-1 rounded-full text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer">
-                  <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
+                  <ChevronLeft className="w-6 h-6 stroke-[2.5]" />
                 </button>
-                <span className="text-[16px] font-black text-gray-900 tracking-tight font-sans">
+                <span className="text-[17px] font-bold text-gray-950 tracking-tight font-sans">
                   Transaction Details
                 </span>
               </div>
               <button 
                 type="button" 
-                onClick={() => alert('Customer support requested.')} 
-                className="text-[#00B875]"
+                onClick={() => alert('Support ticket requested.')} 
+                className="p-1.5 rounded-full text-[#00B875] hover:bg-emerald-50 transition-colors cursor-pointer"
               >
-                <span className="text-sm font-semibold">Support</span>
+                <svg viewBox="0 0 24 24" className="w-5.5 h-5.5 stroke-current fill-none stroke-[2]">
+                  <path d="M12 2a5 5 0 0 0-5 5v3a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5z" />
+                  <path d="M17 10h1a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-1" />
+                  <path d="M7 10H6a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h1" />
+                  <path d="M19 13v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-6" />
+                </svg>
               </button>
             </div>
 
-            <div className="p-4 space-y-4 flex-1 overflow-y-auto no-scrollbar">
+            {/* Scrollable Container containing Cards */}
+            <div className="px-4 py-2 space-y-4 flex-1 overflow-y-auto no-scrollbar flex flex-col">
               
-              {/* High-fidelity authentic receipt layout */}
-              <AuthenticReceipt
-                amount={createdTx.amount}
-                dateStr="Jun 11th, 2026"
-                timeStr={createdTx.time}
-                statusStr="Successful"
-                recipientName={selectedBeneficiary.name}
-                recipientBank={selectedBeneficiary.bankName}
-                recipientAccount={selectedBeneficiary.accountNo}
-                senderName={userFullName}
-                senderBank="OPay"
-                senderAccount={userAccountNumber}
-                transactionNo={createdTx.transactionNo}
-                backdropBg="#F4F5F8" // perfectly matches Step 5 bg parent: lg bg-[#F4F5F8]
-              />
+              {/* Card 1: Transaction Summary Card (Section 2) */}
+              <div className="relative bg-white rounded-[20px] pb-5 px-5 shadow-3xs border border-gray-100/50 text-center flex flex-col items-center mt-7" style={{ paddingTop: isBank ? '40px' : '36px' }}>
+                
+                {/* Floating Logo (Section 2 logo) */}
+                {(() => {
+                  const isBankTransfer = transferType !== 'OPay' && !(selectedBeneficiary?.bankName?.toLowerCase().includes('opay'));
+                  if (!isBankTransfer) {
+                    return (
+                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-white shadow-md border border-gray-100 flex items-center justify-center select-none z-20">
+                        <svg viewBox="0 0 100 100" className="w-8.5 h-8.5">
+                          <circle cx="50" cy="50" r="28" stroke="#00B875" strokeWidth="12.5" fill="none" />
+                          <rect x="14" y="45" width="18" height="10" fill="#130C52" rx="2" />
+                        </svg>
+                      </div>
+                    );
+                  }
+                  // Bank: white ring + blue rounded-square with initial
+                  const bankColors: Record<string, { bg: string; text: string }> = {
+                    moniepoint: { bg: '#2563EB', text: '#FFFFFF' },
+                    'monie point': { bg: '#2563EB', text: '#FFFFFF' },
+                    access: { bg: '#000000', text: '#FF5500' },
+                    uba: { bg: '#D32F2F', text: '#FFFFFF' },
+                    'first bank': { bg: '#0b2545', text: '#EAB308' },
+                    firstbank: { bg: '#0b2545', text: '#EAB308' },
+                    gtbank: { bg: '#E65100', text: '#FFFFFF' },
+                    guaranty: { bg: '#E65100', text: '#FFFFFF' },
+                    zenith: { bg: '#FFFFFF', text: '#DC2626' },
+                    kuda: { bg: '#400080', text: '#1BE0D0' },
+                    palmpay: { bg: '#5E2B97', text: '#FFFFFF' },
+                    wema: { bg: '#8A0F54', text: '#FFFFFF' },
+                    stanbic: { bg: '#0033A0', text: '#FFFFFF' },
+                    sterling: { bg: '#D32F2F', text: '#FFFFFF' },
+                    fidelity: { bg: '#022c22', text: '#FFFFFF' },
+                    fcmb: { bg: '#4F46E5', text: '#EAB308' },
+                  };
+                  const bName = (selectedBeneficiary?.bankName || 'Bank').toLowerCase();
+                  const match = Object.keys(bankColors).find(k => bName.includes(k));
+                  const { bg, text } = match ? bankColors[match] : { bg: '#334155', text: '#FFFFFF' };
+                  const initial = (selectedBeneficiary?.bankName || 'B').trim().charAt(0).toUpperCase();
+                  return (
+                    <div className="absolute -top-7 left-1/2 -translate-x-1/2 z-20 select-none">
+                      <div className="w-14 h-14 rounded-full bg-white shadow-md border border-gray-100 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-[10px] flex items-center justify-center" style={{ backgroundColor: bg }}>
+                          <span className="font-black text-[22px] leading-none" style={{ color: text, fontFamily: 'system-ui, sans-serif' }}>{initial}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
 
-              {/* Repeat Transfer Action Button Block beneath the card */}
-              <div className="bg-white rounded-2xl p-4 border border-slate-100 flex items-center justify-between shadow-xs">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-650 flex items-center justify-center font-bold text-sm">
-                    🔄
-                  </div>
-                  <div className="text-left">
-                    <span className="text-xs font-black text-gray-800 font-sans block leading-none">Repeat Transfer</span>
-                    <span className="text-[10.5px] text-gray-450 font-medium block mt-1 font-sans">Send money to this recipient again</span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStep(2);
-                    setAmountStr('');
-                    setNotes('');
-                  }}
-                  className="bg-[#00B875] text-white px-4 py-2 rounded-xl text-xs font-black hover:opacity-90 transition-all cursor-pointer font-sans"
-                >
-                  Transfer Again
-                </button>
+                {/* Transaction Description */}
+                <span className="text-[15px] text-gray-950 font-bold font-sans leading-snug px-2 mt-0">
+                  Transfer to {selectedBeneficiary.name.toUpperCase()}
+                </span>
+                
+                {/* Amount Display */}
+                <span className="text-[34px] font-black text-gray-950 tracking-tight leading-none mt-3 font-sans">
+                  ₦{Math.abs(createdTx.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+
+                {/* Status – plain green text */}
+                <span className="text-[#00B875] font-bold text-[14px] font-sans mt-2">Successful</span>
+
+                {/* Bank Transfer: 3-step progress tracker */}
+                {isBank && (() => {
+                  const months: Record<string, string> = { Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12' };
+                  const dm = createdTx.date.match(/^(\w{3})\s+(\d+)/);
+                  const pfx = dm ? `${months[dm[1]] || '06'}-${dm[2].padStart(2,'0')}` : '06-11';
+                  const steps = [
+                    { label: 'Payment\nsuccessful', time: `${pfx} ${createdTx.time}` },
+                    { label: 'Processing\nby bank',  time: `${pfx} ${createdTx.time}` },
+                    { label: 'Received\nby bank',    time: `${pfx} 14:03:31` },
+                  ];
+                  return (
+                    <>
+                      {/* Circles + lines */}
+                      <div className="w-full mt-5 flex items-center px-1">
+                        {steps.map((_, idx) => (
+                          <React.Fragment key={idx}>
+                            <div className="w-7 h-7 rounded-full bg-[#00B875] flex items-center justify-center shrink-0 shadow-sm z-10">
+                              <svg className="w-[13px] h-[13px] fill-none stroke-white stroke-[3]" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            </div>
+                            {idx < 2 && <div className="flex-1 h-[2px] bg-[#00B875]" />}
+                          </React.Fragment>
+                        ))}
+                      </div>
+
+                      {/* Labels + timestamps */}
+                      <div className="w-full mt-2 flex">
+                        {steps.map((step, idx) => (
+                          <div key={idx} className="flex flex-col font-sans" style={{ width: '33.333%', alignItems: idx === 0 ? 'flex-start' : idx === 2 ? 'flex-end' : 'center', textAlign: idx === 0 ? 'left' : idx === 2 ? 'right' : 'center' }}>
+                            <span className="text-[11.5px] text-gray-700 font-semibold leading-[1.3] whitespace-pre-line">{step.label}</span>
+                            <span className="text-[10.5px] text-gray-400 font-medium mt-0.5">{step.time}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Credit note */}
+                      <div className="w-full mt-4 bg-[#F4F5F8] rounded-xl px-3.5 py-3">
+                        <p className="text-[11.5px] text-gray-500 font-sans leading-relaxed text-left">
+                          The recipient account is expected to be credited within 5 minutes, subject to notification by the bank.
+                        </p>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
+
+              {/* Card 2: Transaction Details Card (Section 3) */}
+              <div className="bg-white rounded-[20px] p-4.5 shadow-3xs border border-gray-100/50">
+                <h3 className="text-gray-900 font-bold text-sm mb-3.5 font-sans">Transaction Details</h3>
+                
+                <div className="space-y-4">
+                  {/* Recipient Details */}
+                  <div className="flex justify-between items-start text-[13px]">
+                    <span className="text-gray-400 font-medium font-sans">Recipient Details</span>
+                    <div className="text-right">
+                      <div className="font-bold text-gray-950 uppercase font-sans leading-tight">
+                        {selectedBeneficiary.name}
+                      </div>
+                      <div className="text-[10.5px] text-gray-400 font-bold mt-1 uppercase font-sans">
+                        {selectedBeneficiary.bankName} | {selectedBeneficiary.accountNo}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Transaction No. */}
+                  <div className="flex justify-between items-center text-[13px] pt-1">
+                    <span className="text-gray-400 font-medium font-sans">Transaction No.</span>
+                    <div className="flex items-center gap-1.5 font-sans relative">
+                      <span className="font-bold text-gray-950 font-mono text-xs">
+                        {createdTx.transactionNo}
+                      </span>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(createdTx.transactionNo);
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }}
+                        className="text-gray-400 hover:text-gray-600 transition-colors p-1 cursor-pointer"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                      {copied && (
+                        <span className="absolute -top-7 right-0 bg-gray-950 text-white text-[10px] py-1 px-2 rounded-lg shadow-md font-sans font-bold transition-all animate-in fade-in zoom-in duration-200">
+                          Copied!
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Payment Method */}
+                  <div className="flex justify-between items-center text-[13px] pt-1">
+                    <span className="text-gray-400 font-medium font-sans">Payment Method</span>
+                    <button 
+                      type="button"
+                      onClick={() => alert(`Payment Method: ${paymentMethod === 'OWealth' ? 'OWealth' : 'Wallet'}`)}
+                      className="flex items-center gap-0.5 font-bold text-gray-950 font-sans hover:text-[#00B875] transition-colors cursor-pointer"
+                    >
+                      <span>{paymentMethod === 'OWealth' ? 'OWealth' : 'Wallet'}</span>
+                      <ChevronRight className="w-4 h-4 text-gray-400 stroke-[2.5]" />
+                    </button>
+                  </div>
+
+                  {/* Transaction Date */}
+                  <div className="flex justify-between items-center text-[13px] pt-1">
+                    <span className="text-gray-400 font-medium font-sans">Transaction Date</span>
+                    <span className="font-bold text-gray-950 font-sans">
+                      {createdTx.date} {createdTx.time}
+                    </span>
+                  </div>
+
+                  {/* Session ID – bank transfers only */}
+                  {isBank && createdTx.sessionId && (
+                    <div className="flex justify-between items-center text-[13px] pt-1">
+                      <span className="text-gray-400 font-medium font-sans shrink-0 mr-3">Session ID</span>
+                      <div className="flex items-center gap-1.5 font-sans relative">
+                        <span className="font-bold text-gray-950 font-mono text-xs break-all text-right">
+                          {createdTx.sessionId}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(createdTx.sessionId!);
+                            setCopied(true);
+                            setTimeout(() => setCopied(false), 2000);
+                          }}
+                          className="text-gray-400 hover:text-gray-600 transition-colors p-1 cursor-pointer shrink-0"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+
+              {/* Card 3: More Actions Card (Section 4) */}
+              <div className="bg-white rounded-[20px] p-4.5 shadow-3xs border border-gray-100/50">
+                <h3 className="text-gray-900 font-bold text-sm mb-3.5 font-sans">More Actions</h3>
+                
+                <div className={isBank ? '' : 'grid grid-cols-2 gap-4'}>
+                  {/* Transfer Again */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep(2);
+                      setAmountStr('');
+                      setNotes('');
+                    }}
+                    className="flex items-center gap-2 text-[#00B875] hover:opacity-85 transition-opacity text-left cursor-pointer"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-[#E2F7EE] flex items-center justify-center shrink-0">
+                      <svg className="w-3.5 h-3.5 stroke-[#00B875] fill-none stroke-[2.5]" viewBox="0 0 24 24">
+                        <path d="M17 1l4 4-4 4" />
+                        <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                        <path d="M7 23l-4-4 4-4" />
+                        <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                      </svg>
+                    </div>
+                    <span className="text-[13px] font-bold font-sans">Transfer Again</span>
+                  </button>
+
+                  {/* View Records – only for OPay transfers */}
+                  {!isBank && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleCloseAll();
+                        window.dispatchEvent(new CustomEvent('view-transactions-records'));
+                      }}
+                      className="flex items-center gap-2 text-[#00B875] hover:opacity-85 transition-opacity text-left cursor-pointer"
+                    >
+                      <div className="w-7 h-7 rounded-full bg-[#E2F7EE] flex items-center justify-center shrink-0">
+                        <svg className="w-3.5 h-3.5 stroke-[#00B875] fill-none stroke-[2.5]" viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="10" />
+                          <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                      </div>
+                      <span className="text-[13px] font-bold font-sans">View Records</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+
+              {/* Spacer Area (Section 5) */}
+              <div className="flex-1 min-h-[50px] bg-transparent" />
 
             </div>
 
-            {/* Sticky Dual buttons (Screenshot 4 bottom "Report Issue" / "Share Receipt") */}
-            <div className="px-6 pt-4 flex gap-3 select-none">
+            {/* Fixed Bottom Action Area (Section 6) */}
+            <div className="px-5 pb-6 pt-2.5 flex gap-4 select-none shrink-0 bg-[#F4F5F8]">
               <button
                 type="button"
                 onClick={() => alert('Support ticket opened with priority ID #OP260611289')}
-                className="flex-1 bg-white border border-[#00B875] text-[#00B875] font-black py-4 rounded-full text-center text-xs hover:bg-emerald-50 cursor-pointer transition-all uppercase font-sans"
+                className="flex-1 bg-[#E2F7EE] text-[#00B875] font-bold py-3.5 rounded-full text-center text-sm hover:opacity-90 cursor-pointer transition-all font-sans"
               >
                 Report Issue
               </button>
               <button
                 type="button"
                 onClick={() => setIsShareOpen(true)}
-                className="flex-1 bg-[#00B875] text-white font-black py-4 rounded-full text-center text-xs hover:bg-[#00a367] cursor-pointer transition-all shadow-md uppercase font-sans"
+                className="flex-1 bg-[#00B875] text-white font-bold py-3.5 rounded-full text-center text-sm hover:bg-[#00a367] cursor-pointer transition-all shadow-md font-sans"
               >
                 Share Receipt
               </button>
             </div>
           </div>
-        )}
+          );
+        })()}
+
       </div>
 
       {/* Security biometrics approval */}
