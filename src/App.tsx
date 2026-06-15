@@ -15,7 +15,6 @@ import { Beneficiary, Transaction, UserState, NotificationItem } from './types.t
 import { INITIAL_BENEFICIARIES, INITIAL_TRANSACTIONS, INITIAL_NOTIFICATIONS, formatOPayDate, getTxNoPrefix, parseOPayDateTime } from './data.ts';
 
 // Component imports
-import Login from './components/Login.tsx';
 import BiometricModal from './components/BiometricModal.tsx';
 import TransferDrawer from './components/TransferDrawer.tsx';
 import TransactionDetails from './components/TransactionDetails.tsx';
@@ -36,7 +35,7 @@ interface AlertToast {
 
 export default function App() {
   // Authentication & Core State
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const isLoggedIn = true;
   const [user, setUser] = useState<UserState>(() => {
     try {
       const saved = localStorage.getItem('opay_sim_user');
@@ -422,12 +421,6 @@ export default function App() {
     addToast('🔧 Simulator Restored', 'OPay mock platform returned to base credentials.', 'secure');
   };
 
-  // Login handler
-  const handleLoginSuccess = (phoneNumber: string) => {
-    setUser(prev => ({ ...prev, phoneNumber }));
-    setIsLoggedIn(true);
-    addToast('🔐 Access Granted', 'Biometric login matched and verified successfully.', 'secure');
-  };
 
   // Helper to render high-fidelity, unique icons for various transaction categories
   const renderTransactionIcon = (type: string, sizeClass = "w-11 h-11 rounded-2xl") => {
@@ -910,11 +903,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Content Outer Wrapper */}
         <div className="flex flex-col flex-1 sm:pt-4 overflow-y-auto no-scrollbar">
-          {!isLoggedIn ? (
-            <Login onLoginSuccess={handleLoginSuccess} userFullName={user.fullName} />
-          ) : (
             <div className="flex-1 flex flex-col justify-between">
 
               {/* Header Navigation Section */}
@@ -1259,7 +1248,6 @@ export default function App() {
               )}
 
             </div>
-          )}
         </div>
 
         {/* Floating surprise Gift Envelope widget at bottom-right corner for interactive excitement */}
