@@ -640,7 +640,7 @@ export default function App() {
                           {tx.title}
                         </h4>
                         <p className="text-[10px] text-[#8C8C8C] mt-0.5 font-medium">
-                          {tx.date}, {tx.time}
+                          {tx.date.replace(/,\s*\d{4}/, '')}, {tx.time}
                         </p>
                       </div>
                     </div>

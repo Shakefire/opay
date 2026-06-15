@@ -153,8 +153,19 @@ export default function TransactionDetails({ transaction, userFullName, userAcco
             ₦{amountVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
 
-          {/* Transaction Status – plain green text */}
-          <span className="text-[#00B875] font-bold text-[14px] font-sans mt-2">Successful</span>
+          {/* Transaction Status */}
+          {!isBank ? (
+            <div className="flex items-center gap-1.5 mt-2 justify-center">
+              <div className="w-4 h-4 rounded-full bg-[#00B875] flex items-center justify-center">
+                <svg className="w-[10px] h-[10px] fill-none stroke-white stroke-[4]" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <span className="text-[#00B875] font-bold text-[14px] font-sans">Successful</span>
+            </div>
+          ) : (
+            <span className="text-[#00B875] font-bold text-[14px] font-sans mt-2">Successful</span>
+          )}
 
           {/* Bank Transfer: 3-step progress tracker */}
           {isBank && (
@@ -210,10 +221,10 @@ export default function TransactionDetails({ transaction, userFullName, userAcco
             <div className="flex justify-between items-start text-[13px]">
               <span className="text-gray-400 font-medium font-sans shrink-0 mr-3">{labelText}</span>
               <div className="text-right">
-                <div className="font-bold text-gray-950 uppercase font-sans leading-tight">
+                <div className="font-semibold text-gray-800 uppercase font-sans leading-tight">
                   {partnerName}
                 </div>
-                <div className="text-[10.5px] text-gray-400 font-bold mt-1 uppercase font-sans">
+                <div className="text-[10.5px] text-gray-400 font-normal mt-1 font-sans">
                   {partnerBank} | {partnerAccount}
                 </div>
               </div>
@@ -223,7 +234,7 @@ export default function TransactionDetails({ transaction, userFullName, userAcco
             <div className="flex justify-between items-center text-[13px] pt-1">
               <span className="text-gray-400 font-medium font-sans shrink-0 mr-3">Transaction No.</span>
               <div className="flex items-center gap-1.5 font-sans relative">
-                <span className="font-bold text-gray-950 font-mono text-xs">
+                <span className="font-normal text-gray-800 font-sans text-xs">
                   {transaction.transactionNo}
                 </span>
                 <button 
@@ -251,7 +262,7 @@ export default function TransactionDetails({ transaction, userFullName, userAcco
               <button 
                 type="button"
                 onClick={() => alert(`Payment Method: ${transaction.paymentMethod || 'Wallet'}`)}
-                className="flex items-center gap-0.5 font-bold text-gray-950 font-sans hover:text-[#00B875] transition-colors cursor-pointer"
+                className="flex items-center gap-0.5 font-normal text-gray-800 font-sans hover:text-[#00B875] transition-colors cursor-pointer"
               >
                 <span>{transaction.paymentMethod === 'OWealth Interest' || transaction.paymentMethod === 'OWealth' ? 'OWealth' : 'Wallet'}</span>
                 <ChevronRight className="w-4 h-4 text-gray-400 stroke-[2.5]" />
@@ -261,7 +272,7 @@ export default function TransactionDetails({ transaction, userFullName, userAcco
             {/* Transaction Date */}
             <div className="flex justify-between items-center text-[13px] pt-1">
               <span className="text-gray-400 font-medium font-sans">Transaction Date</span>
-              <span className="font-bold text-gray-950 font-sans">
+              <span className="font-normal text-gray-800 font-sans">
                 {transaction.date} {transaction.time}
               </span>
             </div>
