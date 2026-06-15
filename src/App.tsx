@@ -43,12 +43,12 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object') {
-          // If the cached values are the old default, update them to the new default
-          if (parsed.balance === 17000.81) {
-            parsed.balance = 7500.42;
+          // If the cached values are any of the old defaults, update them to the new default
+          if (parsed.balance === 17000.81 || parsed.balance === 7500.42) {
+            parsed.balance = 3031.19;
           }
-          if (parsed.owealthBalance === 17000.81) {
-            parsed.owealthBalance = 7500.42;
+          if (parsed.owealthBalance === 17000.81 || parsed.owealthBalance === 7500.42) {
+            parsed.owealthBalance = 3031.19;
           }
           return parsed;
         }
@@ -57,10 +57,10 @@ export default function App() {
     return {
       fullName: 'SHIMESON',
       phoneNumber: '081 2933 3888',
-      balance: 7500.42,
+      balance: 3031.19,
       bonusBalance: 53.50,
       showBalance: true,
-      owealthBalance: 7500.42,
+      owealthBalance: 3031.19,
       owealthInterestRate: 15.0,
       tierLevel: 3,
       biometricsEnabled: true,
@@ -357,11 +357,27 @@ export default function App() {
     });
 
   // Calculate live inflows and outflows based on the filtered transactions list
-  const totalInflow = filteredTransactions
+  const initialTxIds = new Set([
+    't_tumba_monie', 't_aroma_rest', 't_sc1', 't_sc2', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8',
+    't9', 't10', 't11', 't12', 't13', 't14', 't15', 't16', 't17', 't18', 't19', 't20', 't_m1', 't_m2', 't_m3', 't_a1', 't_a2'
+  ]);
+
+  const isDefaultView = selectedMonthYear === 'Jun 2026' || selectedMonthYear === 'All';
+  const newTransactions = transactions.filter(t => !initialTxIds.has(t.id));
+
+  const newInflow = newTransactions
     .filter(t => t.amount > 0)
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const totalOutflow = filteredTransactions
+  const newOutflow = newTransactions
+    .filter(t => t.amount < 0)
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+  const totalInflow = isDefaultView ? (20031.19 + newInflow) : filteredTransactions
+    .filter(t => t.amount > 0)
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const totalOutflow = isDefaultView ? (17000.00 + newOutflow) : filteredTransactions
     .filter(t => t.amount < 0)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
@@ -388,10 +404,10 @@ export default function App() {
     setUser({
       fullName: 'SHIMESON',
       phoneNumber: '081 2933 3888',
-      balance: 7500.42,
+      balance: 3031.19,
       bonusBalance: 53.50,
       showBalance: true,
-      owealthBalance: 7500.42,
+      owealthBalance: 3031.19,
       owealthInterestRate: 15.0,
       tierLevel: 3,
       biometricsEnabled: true,
